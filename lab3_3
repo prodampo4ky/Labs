@@ -1,0 +1,63 @@
+interface Seg {
+    left?: number;
+    right?: number;
+    char?: string;
+}
+
+ function defineSegments(alphabet: string[], probability: number[]): Seg[] {
+    let l = 0;
+    const segments: Seg[] = [];
+
+    for (let i = 0; i < alphabet.length; ++i) {
+        if (!segments[i]) {
+            segments[i] = {};
+        }
+        segments[i].left = l;
+        segments[i].right = l + probability[i];
+        segments[i].char = alphabet[i];
+        l = segments[i].right;
+    }
+        
+    return segments
+}
+
+function encode(alphabet: string[], probability: number[], source: string): number {
+    const segment = defineSegments(alphabet, probability);
+    let left = 0.0;
+    let right = 1.0;
+    for (let i = 0; i < source.length; ++i) {
+        const c = source[i];
+        const index = alphabet.findIndex((val) => val === c);
+        const newRight = left + (right - left) * segment[index].right;
+        const newLeft = left + (right - left) * segment[index].left;
+        left = newLeft;
+        right = newRight;
+        console.log(`char: ${c}; left: ${left}; right: ${right}`);
+    }
+        
+    return (left + right) / 2
+}
+    
+
+function decode(alphabet: string[], probability: number[], code: number, n: number): string {
+    const segment = defineSegments(alphabet, probability);
+    let s = '';
+    for (let i = 0; i < n; ++i) {
+        for (let j = 0; j < alphabet.length; ++j) {
+            if (code >= segment[j].left && code < segment[j].right) {
+                s = s + segment[j].char;
+                code = (code - segment[j].left) / (segment[j].right - segment[j].left);
+                break;
+            }
+              
+        }
+    }
+    return s;
+}
+    
+
+const encoded = encode(['A', 'B', 'C', 'D'], [0.1, 0.3, 0.2, 0.4], 'DDBDBCACBD');
+console.log(encoded);
+
+const decoded = decode(['A', 'B', 'C', 'D'], [0.1, 0.3, 0.2, 0.4], encoded, 10);
+console.log('decoded source: ' + decoded);
